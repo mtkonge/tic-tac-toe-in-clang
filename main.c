@@ -25,8 +25,8 @@ bool has_won(player_t turn, cell_t board[9]) {
         }
     }
     // crosses
-    if (board[0] == cell_turn && board[4] == cell_turn && board[8] == cell_turn ||
-        board[2] == cell_turn && board[4] == cell_turn && board[6] == cell_turn) {
+    if ((board[0] == cell_turn && board[4] == cell_turn && board[8] == cell_turn) ||
+        (board[2] == cell_turn && board[4] == cell_turn && board[6] == cell_turn)) {
         return true;
     }
 
@@ -69,13 +69,6 @@ void print_board(cell_t board[9]) {
            char_board[6], char_board[7], char_board[8]);
 }
 
-void clear_input() {
-    int c;
-    while ((c = getchar()) != '\n' && c != EOF) {
-        // do nothing
-    }
-}
-
 char player_char(player_t player) {
     if (player == PLAYER_X) {
         return 'X';
@@ -89,16 +82,6 @@ cell_t player_cell(player_t player) {
         return X;
     } else {
         return O;
-    }
-}
-
-void mutate_board(player_t *current_turn, cell_t board[9], int picked_cell_id) {
-    if (*current_turn == PLAYER_X) {
-        board[picked_cell_id] = X;
-        *current_turn = PLAYER_O;
-    } else {
-        board[picked_cell_id] = O;
-        *current_turn = PLAYER_X;
     }
 }
 
@@ -123,22 +106,31 @@ bool is_valid_input(int picked_cell_id, cell_t board[9]) {
 
 int main() {
     cell_t board[9];
-    for (int i = 0; i < sizeof(board) / sizeof(board[0]); i++) {
+    for (size_t i = 0; i < sizeof(board) / sizeof(board[0]); i++) {
         board[i] = EMPTY;
     }
     player_t current_turn = PLAYER_X;
-    int picked_cell_id;
 
     while (true) {
+        char line[64] = "";
+        int picked_cell_id;
         print_board(board);
         printf("Pick a space on the board from 0-8 (%c's turn): ", player_char(current_turn));
-        if (scanf("%d", &picked_cell_id) != 1) {
-            printf("Invalid input, please enter a number\n");
-            clear_input();
+
+        if (fgets(line, sizeof(line), stdin) == NULL) {
+            printf("\n");
+            clearerr(stdin);
             continue;
         }
 
-        is_valid_input(picked_cell_id, board);
+        if (sscanf(line, " %d", &picked_cell_id) != 1) {
+            printf("Invalid input, please enter a number\n");
+            continue;
+        }
+
+        if (!is_valid_input(picked_cell_id, board)) {
+            continue;
+        }
 
         board[picked_cell_id] = player_cell(current_turn);
 
@@ -150,7 +142,7 @@ int main() {
 
         if (is_tie(board)) {
             print_board(board);
-            printf("No available cells left, it's a tie \n");
+            printf("No available cells left, it's a tie\n");
             exit(0);
         }
 
